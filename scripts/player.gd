@@ -14,9 +14,9 @@ var flashlight: SpotLight3D
 var active: bool = false
 var head_bob_enabled: bool = true
 var mouse_sensitivity: float = 0.0018
-var walk_speed: float = 2.9
-var sprint_speed: float = 4.8
-var crouch_speed: float = 1.5
+var walk_speed: float = 2.25
+var sprint_speed: float = 3.6
+var crouch_speed: float = 1.2
 var is_crouching: bool = false
 var movement_amount: float = 0.0
 var _pitch: float = 0.0
@@ -47,16 +47,16 @@ func _ready() -> void:
 	camera.name = "Eyes"
 	camera.current = true
 	camera.position.y = EYE_HEIGHT
-	camera.fov = 76.0
+	camera.fov = 72.0
 	camera.near = 0.04
 	camera.far = 180.0
 	add_child(camera)
 	flashlight = SpotLight3D.new()
 	flashlight.name = "InspectionLamp"
 	flashlight.position = Vector3(0.19, -0.16, -0.15)
-	flashlight.light_color = Color(0.88, 0.91, 0.83)
-	flashlight.light_energy = 2.1
-	flashlight.spot_range = 19.0
+	flashlight.light_color = Color(1.0, 0.83, 0.59)
+	flashlight.light_energy = 1.4
+	flashlight.spot_range = 14.0
 	flashlight.spot_angle = 31.0
 	flashlight.spot_angle_attenuation = 1.7
 	flashlight.spot_attenuation = 0.8
@@ -143,14 +143,14 @@ func _update_camera(delta: float) -> void:
 	if head_bob_enabled and is_on_floor() and active:
 		_bob_clock += movement_amount * delta * 3.2
 		var strength: float = minf(movement_amount / walk_speed, 1.4)
-		bob.x = sin(_bob_clock * 0.5) * 0.018 * strength
-		bob.y = sin(_bob_clock) * 0.023 * strength
+		bob.x = sin(_bob_clock * 0.5) * 0.0126 * strength
+		bob.y = sin(_bob_clock) * 0.0161 * strength
 	camera.position = Vector3(bob.x, _base_eye + bob.y, 0.0)
 	_sway = _sway.lerp(Vector2.ZERO, 1.0 - exp(-7.0 * delta))
 	var lean: float = -global_basis.x.dot(velocity) * 0.0025 if head_bob_enabled else 0.0
 	camera.rotation = Vector3(_pitch, 0.0, lerpf(camera.rotation.z, lean, 1.0 - exp(-7.0 * delta)))
 	flashlight.rotation = Vector3(-_sway.y, -_sway.x, 0.0)
-	var fov_target: float = 79.0 if movement_amount > walk_speed + 0.2 else 76.0
+	var fov_target: float = 75.0 if movement_amount > walk_speed + 0.2 else 72.0
 	camera.fov = lerpf(camera.fov, fov_target, 1.0 - exp(-3.0 * delta))
 
 

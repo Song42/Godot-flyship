@@ -3,10 +3,10 @@ render_mode specular_schlick_ggx;
 
 uniform vec4 base_color : source_color = vec4(0.16, 0.22, 0.23, 1.0);
 uniform vec4 wear_color : source_color = vec4(0.29, 0.31, 0.28, 1.0);
-uniform float metallic_amount : hint_range(0.0, 1.0) = 0.72;
-uniform float roughness_amount : hint_range(0.0, 1.0) = 0.64;
+uniform float metallic_amount : hint_range(0.0, 1.0) = 0.35;
+uniform float roughness_amount : hint_range(0.0, 1.0) = 0.86;
 uniform float weathering : hint_range(0.0, 1.0) = 0.3;
-uniform float bump_strength : hint_range(0.0, 1.0) = 0.16;
+uniform float bump_strength : hint_range(0.0, 1.0) = 0.025;
 uniform bool tread_plate = false;
 uniform bool hazard_stripe = false;
 varying vec3 world_position;
@@ -54,15 +54,15 @@ void fragment() {
 	vec3 p = world_position;
 	vec2 plane = surface_plane(p, world_normal);
 	float broad = noise3(p * 0.82);
-	float grain = noise3(p * 78.0);
-	float scuff = noise3(p * vec3(38.0, 230.0, 19.0));
+	float grain = noise3(p * 12.0);
+	float scuff = noise3(p * vec3(8.0, 21.0, 7.0));
 	float grime = smoothstep(0.34, 0.78, broad);
-	float scratches = smoothstep(0.75, 0.88, scuff) * weathering * 0.6;
-	vec3 col = base_color.rgb * (0.95 + grain * 0.078);
+	float scratches = smoothstep(0.62, 0.88, scuff) * weathering * 0.16;
+	vec3 col = base_color.rgb * (0.98 + grain * 0.025);
 	col = mix(col, col * vec3(0.49, 0.43, 0.35), grime * weathering * 0.52);
 	col = mix(col, wear_color.rgb, scratches * 0.45);
-	float height = grain * 0.00033 + scuff * 0.00012;
-	float rough = roughness_amount + (grime - 0.5) * 0.17 + (grain - 0.5) * 0.033;
+	float height = grain * 0.0001 + scuff * 0.00004;
+	float rough = roughness_amount + (grime - 0.5) * 0.055;
 	if (tread_plate) {
 		float footprint = max(length(dFdx(plane)), length(dFdy(plane)));
 		float detail_visibility = 1.0 - smoothstep(0.012, 0.07, footprint);
@@ -73,7 +73,7 @@ void fragment() {
 	}
 	if (hazard_stripe) {
 		float stripe = step(0.5, fract((plane.x + plane.y) * 2.1));
-		col = mix(vec3(0.035, 0.044, 0.044), vec3(0.6, 0.36, 0.075), stripe);
+		col = mix(vec3(0.035, 0.033, 0.027), vec3(0.32, 0.23, 0.11), stripe);
 		col *= 0.72 + broad * 0.27;
 		col = mix(col, wear_color.rgb, scratches * 0.8);
 	}
@@ -86,7 +86,7 @@ void fragment() {
 	vec3 gradient = sign(determinant) * (dFdx(height) * r1 + dFdy(height) * r2);
 	NORMAL = normalize(abs(determinant) * NORMAL - bump_strength * gradient + vec3(0.0, 0.0, 0.00000001));
 	ALBEDO = col;
-	METALLIC = metallic_amount;
-	ROUGHNESS = clamp(rough, 0.19, 0.96);
-	SPECULAR = 0.5;
+	METALLIC = min(metallic_amount, 0.5);
+	ROUGHNESS = clamp(rough, 0.75, 1.0);
+	SPECULAR = 0.2;
 }

@@ -46,8 +46,20 @@ func _run() -> void:
     ui._input(key("interact"))
     expect(not ui._log_open and player.active, "Interact key closes archive")
     expect(ui._map_drawing.rooms.size() == scene.room_bounds.size(), "Map uses authoritative room data")
+    ui._map_drawing.fit_rooms()
+    var map_inset := Rect2(Vector2(20, 20), ui._map_drawing.size - Vector2(40, 40))
+    for room: Dictionary in scene.room_bounds:
+        var bounds: Rect2 = room.rect
+        expect(map_inset.has_point(ui._map_drawing._point(bounds.position)), "Map contains upper corner: " + room.name)
+        expect(map_inset.has_point(ui._map_drawing._point(bounds.end)), "Map contains lower corner: " + room.name)
+    scene.ambience.set_zone("BALCONY")
+    scene.ambience._process(2.0)
+    expect(scene.ambience._wind.volume_db > -28.0, "Outdoor wind is audible on balcony")
+    scene.ambience.set_zone("CREW QUARTERS")
+    scene.ambience._process(2.0)
+    expect(scene.ambience._wind.volume_db < -40.0, "Cabin walls shelter outdoor wind")
     scene.ambience.play_door()
-    expect(scene.ambience._door.playing, "Door actuator sound starts")
+    expect(scene.ambience._door.playing, "Door hinge sound starts")
     await process_frame
     var viewport_size: Vector2 = root.get_visible_rect().size
     expect(ui._bearing_label.get_rect().position.x > viewport_size.x * 0.6, "Right HUD anchor")
@@ -56,9 +68,10 @@ func _run() -> void:
     print("UI CHECK: viewport=", viewport_size, " bearing=", ui._bearing_label.get_rect(), " map=", ui._map_drawing.get_rect())
     scene.queue_free()
     await process_frame
-    await process_frame
+    # Let the audio mixer release stopped playback handles before shutdown.
+    await create_timer(0.08).timeout
     if failures.is_empty():
-        print("UI SMOKE PASS: intro, movement capture, pause, map, flashlight, audio, anchors")
+        print("UI SMOKE PASS: intro, movement capture, pause, fitted map, lantern, interior/exterior audio, anchors")
         quit(0)
     else:
         for message in failures:

@@ -16,13 +16,16 @@ func configure(palette: Dictionary) -> void:
 		"brass": Color("927043"), "copper": Color("98623f"),
 		"dark": Color("11191d"), "rubber": Color("181b1c"),
 		"glow_amber": Color("ffc779"), "glow_cyan": Color("8be0d8"),
-		"red": Color("9f382d"), "glass": Color("263f40")}
+		"red": Color("9f382d"), "glass": Color("263f40"),
+		"wood": Color("513721"), "wood_dark": Color("2d2118"),
+		"wood_light": Color("785a39"), "paper": Color("c3ad7c"),
+		"leather": Color("362820"), "cloth": Color("5b5341")}
 	for key in defaults:
 		if not materials.has(key):
 			var mat := StandardMaterial3D.new()
 			mat.albedo_color = defaults[key]
-			mat.metallic = 0.78 if key not in ["rubber", "glass"] else 0.12
-			mat.roughness = 0.39 if key in ["brass", "steel"] else 0.7
+			mat.metallic = 0.55 if key in ["iron", "steel", "brass", "copper"] else 0.0
+			mat.roughness = 0.72 if key in ["brass", "steel"] else 0.9
 			if str(key).begins_with("glow"):
 				mat.emission_enabled = true
 				mat.emission = defaults[key]
@@ -147,7 +150,7 @@ func _gauge(parent: Node3D, pos: Vector3, radius: float = 0.21, value: String = 
 	var gauge := _group(parent, pos, "PressureGauge")
 	var housing := _cyl(gauge, Vector3.ZERO, radius + 0.035, 0.09, "dark", true)
 	housing.rotation.x = PI / 2.0
-	var face := _cyl(gauge, Vector3(0, 0, -0.054), radius, 0.012, "steel", true)
+	var face := _cyl(gauge, Vector3(0, 0, -0.054), radius, 0.012, "paper", true)
 	face.rotation.x = PI / 2.0
 	_ring(gauge, Vector3(0, 0, -0.063), radius, 0.019, "brass", true)
 	for i in range(11):
@@ -236,65 +239,63 @@ func make_boiler(parent: Node3D, pos: Vector3) -> Node3D:
 
 func make_console(parent: Node3D, pos: Vector3, rotation_y: float = 0.0) -> Node3D:
 	var console := _group(parent, pos, "InstrumentConsole", rotation_y)
-	_box(console, Vector3(0, 0.6, 0.1), Vector3(2.6, 1.2, 0.9), "iron")
-	_box(console, Vector3(0, 0.09, 0.0), Vector3(2.72, 0.18, 1.16), "dark")
-	_box(console, Vector3(0, 1.32, 0.31), Vector3(2.64, 0.72, 0.3), "dark")
-	_box(console, Vector3(0, 1.32, 0.142), Vector3(2.48, 0.57, 0.035), "brass")
+	_box(console, Vector3(0, 0.6, 0.1), Vector3(2.6, 1.2, 0.9), "wood")
+	_box(console, Vector3(0, 0.09, 0.0), Vector3(2.72, 0.18, 1.16), "wood_dark")
+	_box(console, Vector3(0, 1.32, 0.31), Vector3(2.64, 0.72, 0.3), "wood_dark")
+	_box(console, Vector3(0, 1.32, 0.142), Vector3(2.48, 0.57, 0.035), "wood_light")
 	for x in [-0.85, -0.28, 0.29]:
 		_gauge(console, Vector3(x, 1.37, 0.09), 0.17, "RPM" if x < -0.5 else "BAR", x)
-	_box(console, Vector3(0.9, 1.38, 0.09), Vector3(0.31, 0.32, 0.04), "dark")
-	for y in [1.29, 1.38, 1.47]:
-		_box(console, Vector3(0.9, y, 0.062), Vector3(0.23, 0.026, 0.012), "glow_cyan", true)
-	var control_deck := _box(console, Vector3(0, 1.18, -0.3), Vector3(2.64, 0.13, 0.82), "iron")
+	_gauge(console, Vector3(0.9, 1.37, 0.09), 0.135, "VOLTS", 0.75)
+	var control_deck := _box(console, Vector3(0, 1.18, -0.3), Vector3(2.64, 0.13, 0.82), "wood_dark")
 	control_deck.rotation.x = -0.13
 	for x in [-1.03, -0.68, -0.33, 0.02, 0.37]:
 		_cyl(console, Vector3(x, 1.29, -0.32), 0.07, 0.035, "brass", true)
-		_cyl(console, Vector3(x, 1.32, -0.32), 0.038, 0.025, "glow_amber" if x < -0.5 else "glow_cyan", true)
-		_box(console, Vector3(x, 1.285, -0.55), Vector3(0.17, 0.015, 0.08), "steel", true)
+		_cyl(console, Vector3(x, 1.32, -0.32), 0.038, 0.025, "glow_amber" if x < -0.5 else "leather", true)
+		_box(console, Vector3(x, 1.285, -0.55), Vector3(0.17, 0.015, 0.08), "paper", true)
 	for x in [0.79, 1.08]:
 		_box(console, Vector3(x, 1.29, -0.36), Vector3(0.12, 0.04, 0.45), "dark")
 		_pipe(console, Vector3(x, 1.3, -0.37), Vector3(x, 1.58, -0.51), 0.025, "steel")
-		_cyl(console, Vector3(x, 1.6, -0.52), 0.055, 0.08, "rubber")
+		_cyl(console, Vector3(x, 1.6, -0.52), 0.055, 0.08, "leather")
 	for x in [-1.08, 1.08]:
 		for y in [0.22, 0.9]:
 			var bolt := _cyl(console, Vector3(x, y, -0.37), 0.035, 0.025, "brass", true)
 			bolt.rotation.x = PI / 2.0
 	for y in range(7):
 		_box(console, Vector3(0, 0.37 + y * 0.055, -0.365), Vector3(1.2, 0.022, 0.025), "dark", true)
-	_text(console, Vector3(0, 0.89, -0.37), "AETHER SYSTEMS / Mk. IV", 26, 0.003)
+	_text(console, Vector3(0, 0.89, -0.37), "HARTWELL & SONS / STEAM GOVERNOR", 26, 0.0024)
 	_collision(console, Vector3(0, 0.85, 0), Vector3(2.65, 1.7, 1.15))
 	return console
 
 func make_crate(parent: Node3D, pos: Vector3, size: Vector3 = Vector3(1.6, 1.3, 1.3)) -> Node3D:
 	var crate := _group(parent, pos, "CargoCrate")
-	_box(crate, Vector3(0, size.y * 0.5, 0), size, "iron")
+	_box(crate, Vector3(0, size.y * 0.5, 0), size, "wood")
 	var inset := size - Vector3(0.18, 0.18, 0.18)
 	for x in [-1.0, 1.0]:
 		for z in [-1.0, 1.0]:
-			_box(crate, Vector3(x * (size.x * 0.5 - 0.035), size.y * 0.5, z * (size.z * 0.5 - 0.035)), Vector3(0.11, size.y + 0.03, 0.11), "steel")
+			_box(crate, Vector3(x * (size.x * 0.5 - 0.035), size.y * 0.5, z * (size.z * 0.5 - 0.035)), Vector3(0.11, size.y + 0.03, 0.11), "wood_dark")
 	for y in [0.07, size.y - 0.07]:
-		_box(crate, Vector3(0, y, 0), Vector3(size.x + 0.04, 0.13, size.z + 0.04), "dark")
+		_box(crate, Vector3(0, y, 0), Vector3(size.x + 0.04, 0.13, size.z + 0.04), "wood_dark")
 	for x in [-0.28, 0.28]:
-		_box(crate, Vector3(size.x * x, size.y * 0.5, 0), Vector3(0.09, size.y + 0.055, size.z + 0.055), "brass")
+		_box(crate, Vector3(size.x * x, size.y * 0.5, 0), Vector3(0.09, size.y + 0.055, size.z + 0.055), "iron")
 	# Recessed corrugation, cast corner protectors and two-sided manifests make
 	# the crates readable from the main cargo aisle as well as from behind.
 	for facing in [-1.0, 1.0]:
 		var front_z: float = facing * (size.z * 0.5 + 0.02)
 		for rib in range(8):
 			var at_x: float = -size.x * 0.4 + float(rib) * size.x * 0.8 / 7.0
-			_box(crate, Vector3(at_x, size.y * 0.5, front_z), Vector3(0.045, inset.y - 0.1, 0.045), "steel", true)
+			_box(crate, Vector3(at_x, size.y * 0.5, front_z), Vector3(0.045, inset.y - 0.1, 0.045), "wood_light", true)
 		var plaque_width: float = minf(0.76, size.x * 0.5)
 		_box(crate, Vector3(0, size.y * 0.56, front_z + facing * 0.035), Vector3(plaque_width, size.y * 0.26, 0.034), "dark", true)
-		var label := _text(crate, Vector3(0, size.y * 0.58, front_z + facing * 0.055), "N–07 / 184\nSEALED FREIGHT", 28, minf(0.0024, size.y * 0.0025), Color("c4c4ab"))
+		var label := _text(crate, Vector3(0, size.y * 0.58, front_z + facing * 0.055), "H & S / No. 184\nENGINE STORES", 28, minf(0.0024, size.y * 0.0025), Color("c4b38e"))
 		label.rotation.y = PI if facing < 0.0 else 0.0
-		_box(crate, Vector3(0, size.y * 0.39, front_z + facing * 0.043), Vector3(plaque_width, 0.055, 0.027), "warning" if materials.has("warning") else "brass", true)
+		_box(crate, Vector3(0, size.y * 0.39, front_z + facing * 0.043), Vector3(plaque_width, 0.025, 0.027), "brass", true)
 		for x in [-1.0, 1.0]:
 			for y in [0.2, size.y - 0.2]:
-				_box(crate, Vector3(x * (size.x * 0.5 - 0.12), y, front_z + facing * 0.022), Vector3(0.24, 0.25, 0.065), "steel")
+				_box(crate, Vector3(x * (size.x * 0.5 - 0.12), y, front_z + facing * 0.022), Vector3(0.24, 0.25, 0.065), "iron")
 		var side_x: float = facing * (size.x * 0.5 + 0.023)
 		for rib in range(6):
 			var at_z: float = -size.z * 0.36 + float(rib) * size.z * 0.72 / 5.0
-			_box(crate, Vector3(side_x, size.y * 0.5, at_z), Vector3(0.045, inset.y - 0.1, 0.05), "steel", true)
+			_box(crate, Vector3(side_x, size.y * 0.5, at_z), Vector3(0.045, inset.y - 0.1, 0.05), "wood_light", true)
 		_box(crate, Vector3(side_x + facing * 0.018, size.y * 0.5, 0), Vector3(0.025, size.y * 0.25, size.z * 0.37), "dark", true)
 		var weight := _text(crate, Vector3(side_x + facing * 0.035, size.y * 0.5, 0), "↑  840 KG  ↑", 28, minf(0.0022, size.z * 0.0016), Color("b6a378"))
 		weight.rotation.y = facing * PI / 2.0
@@ -377,7 +378,7 @@ func make_valve(parent: Node3D, pos: Vector3, rotation_y: float = 0.0) -> Node3D
 
 func make_bench(parent: Node3D, pos: Vector3) -> Node3D:
 	var bench := _group(parent, pos, "MaintenanceBench")
-	_box(bench, Vector3(0, 0.84, 0), Vector3(2.8, 0.12, 1.0), "steel")
+	_box(bench, Vector3(0, 0.84, 0), Vector3(2.8, 0.12, 1.0), "wood_light")
 	for x in [-1.18, 1.18]:
 		for z in [-0.36, 0.36]:
 			_box(bench, Vector3(x, 0.41, z), Vector3(0.1, 0.82, 0.1), "iron")
